@@ -32,6 +32,70 @@ app.get('/api/persons', (request, response) => {
     response.json(persons)
 })
 
+app.get('/info', (request, response) => {
+
+    var currentdate = new Date();
+    var datetime = "" + currentdate.getDate() + "/"
+        + (currentdate.getMonth() + 1) + "/"
+        + currentdate.getFullYear() + " @ "
+        + currentdate.getHours() + ":"
+        + currentdate.getMinutes() + ":"
+        + currentdate.getSeconds();
+
+    response.send('<p>Phonebook has ' + persons.persons.length + ' entries.</p><p>' + datetime + '</p>')
+})
+
+app.delete('/api/persons/:id', (request, response) => {
+    const id = Number(request.params.id)
+    persons.persons = persons.persons.filter(p => p.id !== id)
+
+    response.status(204).end()
+})
+
+const generateId = () => {
+    return Math.floor(Math.random() * 100000)
+}
+
+app.post('/api/persons', (request, response) => {
+    const body = request.body
+
+    if (!body.name) {
+        return response.status(400).json({
+            error: 'name missing'
+        })
+    }
+    if (!body.number) {
+        return response.status(400).json({
+            error: 'number missing'
+        })
+    }
+
+    if (persons.persons.find(p => p.name === body.name)) {
+        return response.status(400).json({
+            error: 'name must be unique'
+        })
+    }
+
+    const person = {
+        name: body.name,
+        number: body.number,
+        id: generateId(),
+    }
+
+    persons.persons = persons.persons.concat(person)
+
+    response.json(person)
+})
+
+app.get('/api/persons/:id', (request, response) => {
+    const id = Number(request.params.id)
+    const person = persons.persons.find(person => person.id === id)
+    if (person) {
+        response.json(person)
+    } else {
+        response.status(404).end()
+    }
+})
 
 const PORT = 3001
 app.listen(PORT, () => {
